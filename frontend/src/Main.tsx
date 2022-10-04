@@ -18,13 +18,12 @@ interface BoardProps {
 export default function Main({ letters, allWords, gameOver, foundWords, onClear, onSelectLetter, onDeleteLetter, onNewGame, onGiveUp, onSubmit, selectedIndices }: BoardProps) {
   return (
     <Container maxWidth="container.xl">
-      
-      <VStack width="full" height="full" paddingY={5} spacing={5} alignItems="flex-start">
+      <VStack width="full" height="100vh" paddingY={5} spacing={5} alignItems="flex-start">
         <HStack width="full" alignItems="center" justifyContent="space-between">
           <Heading size="2xl">Nian</Heading>
           <HStack>
-            <Button size="md" colorScheme="red" onClick={() => onGiveUp()} disabled={gameOver}>Admit defeat</Button>
-            <Button size="md" colorScheme="green" onClick={() => onNewGame()}>New</Button>
+            <Button size="md" variant="outline" colorScheme="red" onClick={() => onGiveUp()} disabled={gameOver}>Admit defeat</Button>
+            <Button size="md" variant="outline" colorScheme="green" onClick={() => onNewGame()}>New</Button>
           </HStack>
         </HStack>
         <SimpleGrid columns={3} columnGap={1} rowGap={1} width="full">
@@ -64,24 +63,26 @@ export default function Main({ letters, allWords, gameOver, foundWords, onClear,
             <ArrowBackIcon/>
           </Button>
         </HStack>
-        <Button width="full" onClick={() => onSubmit()} disabled={gameOver || selectedIndices.length < 4 || selectedIndices.indexOf(4) === -1}>
+        <Button width="full" padding="3" colorScheme="green" onClick={() => onSubmit()} disabled={gameOver || selectedIndices.length < 4 || selectedIndices.indexOf(4) === -1}>
           Submit
         </Button>
     
         <Center width="full"><Text fontSize="lg">{foundWords.length} of {allWords.length} found</Text></Center>
-        <Wrap width="full" height="full" padding={5} spacing={3}>
-          {(gameOver ? allWords : foundWords).sort().map((word, i) => (
-            <HStack alignItems="center">
-              {foundWords.indexOf(word) !== -1 ? (
-                <Icon as={CheckCircleIcon} color="green.500" />
-              ) : (
-                <Icon as={WarningIcon} color="red.500" />
-              )}
-              <Box textTransform="uppercase">{word}</Box>
-            </HStack>
-          ))}
-        </Wrap>
+        <Box borderColor="blackAlpha.300" borderRadius="lg" overflowY="scroll" style={{ touchAction: "pan-y" }} borderWidth="medium" width="full">
+          <Wrap width="full" height="full" padding={5} spacing={3} overflow="visible">
 
+            {(gameOver ? allWords : foundWords).sort().map((word, i) => (
+              <HStack alignItems="center">
+                {foundWords.indexOf(word) !== -1 ? (
+                  <Icon as={CheckCircleIcon} color="green.500" />
+                ) : (
+                  <Icon as={WarningIcon} color="red.500" />
+                )}
+                <Box textTransform="uppercase">{word}</Box>
+              </HStack>
+            ))}
+          </Wrap>
+        </Box>
       </VStack>
     </Container>
   )
