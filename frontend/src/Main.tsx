@@ -27,14 +27,15 @@ export default function Main({ letters, allWords, gameOver, foundWords, onClear,
             <Button size="md" colorScheme="green" onClick={() => onNewGame()}>New</Button>
           </HStack>
         </HStack>
-        <SimpleGrid columns={3} columnGap={3} rowGap={3} width="full">
+        <SimpleGrid columns={3} columnGap={1} rowGap={1} width="full">
           {Array.from(letters).map((letter, i) => (
             <GridItem key={"letter-" + i}>
               <Button
                 disabled={gameOver}
-                isActive={selectedIndices.indexOf(i) !== -1}
+                borderWidth="medium"
+                backgroundColor={i === 4 ? "whiteAlpha.300" : ""}
+                borderColor={selectedIndices.indexOf(i) !== -1 ? "green.500" : "transparent"}
                 textTransform="uppercase"
-                colorScheme={i === 4 ? "cyan" : "gray"}
                 size="lg"
                 width="full"
                 onClick={() => {
@@ -69,7 +70,7 @@ export default function Main({ letters, allWords, gameOver, foundWords, onClear,
     
         <Center width="full"><Text fontSize="lg">{foundWords.length} of {allWords.length} found</Text></Center>
         <Wrap width="full" height="full" padding={5} spacing={3}>
-          {(gameOver ? allWords : foundWords).map((word, i) => (
+          {(gameOver ? allWords : foundWords).sort().map((word, i) => (
             <HStack alignItems="center">
               {foundWords.indexOf(word) !== -1 ? (
                 <Icon as={CheckCircleIcon} color="green.500" />

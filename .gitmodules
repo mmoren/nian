@@ -1,0 +1,3 @@
+[submodule "svenska-ord.txt"]
+	path = svenska-ord.txt
+	url = https://github.com/almgru/svenska-ord.txt

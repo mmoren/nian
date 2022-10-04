@@ -1,7 +1,9 @@
 package main
 
 import (
+	"bufio"
 	"encoding/json"
+	"log"
 	"math/rand"
 	"net/http"
 	"os"
@@ -11,18 +13,7 @@ import (
 	"time"
 
 	"github.com/gorilla/handlers"
-	"gitlab.com/maxmoren/nian/lexin"
 )
-
-var wordClasses = map[string]interface{}{
-	"subst.":  struct{}{},
-	"adj.":    struct{}{},
-	"verb":    struct{}{},
-	"adv.":    struct{}{},
-	"räkn.":   struct{}{},
-	"interj.": struct{}{},
-	"pron.":   struct{}{},
-}
 
 type Word struct {
 	Form string   `json:"form"`
@@ -30,43 +21,20 @@ type Word struct {
 	Defs []string `json:"defs"`
 }
 
-var numberSuffix = regexp.MustCompile(" [0-9]+$")
+var goodWord = regexp.MustCompile("^[a-zåäö]+")
 
-func getDefs(le lexin.LemmaEntry) []string {
-	var defs []string
-	for _, lexeme := range le.Lexemes {
-		if lexeme.Definition != "" {
-			defs = append(defs, lexeme.Definition)
+func filter(l []string, min, max int) []string {
+	var out []string
+	for _, word := range l {
+		if len([]rune(word)) < min || len([]rune(word)) > max {
+			continue
 		}
+		if !goodWord.MatchString(word) {
+			continue
+		}
+
+		out = append(out, word)
 	}
-	return defs
-}
-
-func filter(l *lexin.Lexin, min, max int) []Word {
-	var out []Word
-
-	for _, le := range l.LemmaEntries {
-		if _, ok := wordClasses[le.Pos]; !ok {
-			continue
-		}
-
-		form := strings.ReplaceAll(numberSuffix.ReplaceAllString(le.Form, ""), "~", "")
-
-		if strings.ContainsAny(form, " -") {
-			continue
-		}
-
-		if len([]rune(form)) < min || len([]rune(form)) > max {
-			continue
-		}
-
-		out = append(out, Word{
-			Form: form,
-			Pos:  le.Pos,
-			Defs: getDefs(le),
-		})
-	}
-
 	return out
 }
 
@@ -99,33 +67,44 @@ func main() {
 	http.Handle("/board", apiHandler)
 	http.Handle("/", staticHandler)
 
+	log.Println("ready")
+
 	http.ListenAndServe(":8080", nil)
 }
 
-func generateBaseBoards() {
-	f, err := os.Open("LEXIN.xml")
+func readLines(path string) ([]string, error) {
+	file, err := os.Open(path)
 	if err != nil {
-		panic("open LEXIN.xml: " + err.Error())
+		return nil, err
 	}
-	defer f.Close()
+	defer file.Close()
 
-	l, err := lexin.Parse(f)
+	var lines []string
+	scanner := bufio.NewScanner(file)
+	for scanner.Scan() {
+		lines = append(lines, scanner.Text())
+	}
+	return lines, scanner.Err()
+}
+
+func generateBaseBoards() {
+	l, err := readLines("svenska-ord.txt/svenska-ord.txt")
 	if err != nil {
-		panic("parse: " + err.Error())
+		panic("readLines: " + err.Error())
 	}
 
 	words := filter(l, 4, 9)
-	wordsByKey := make(map[string][]Word)
+	wordsByKey := make(map[string][]string)
 
 	for _, w := range words {
-		key := sortedChars(w.Form)
+		key := sortedChars(w)
 		wordsByKey[key] = append(wordsByKey[key], w)
 	}
 
 	nines := filter(l, 9, 9)
 	for _, nine := range nines {
-		var words []Word
-		subsets := subsets(nine.Form)
+		var words []string
+		subsets := subsets(nine)
 
 		for _, ss := range subsets {
 			if ws, ok := wordsByKey[ss]; ok {
@@ -136,14 +115,14 @@ func generateBaseBoards() {
 		wordExists := make(map[string]struct{})
 		var uniqueWords []Word
 		for _, word := range words {
-			if _, ok := wordExists[word.Form]; !ok {
-				uniqueWords = append(uniqueWords, word)
-				wordExists[word.Form] = struct{}{}
+			if _, ok := wordExists[word]; !ok {
+				uniqueWords = append(uniqueWords, Word{Form: word})
+				wordExists[word] = struct{}{}
 			}
 		}
 
 		allBoards = append(allBoards, board{
-			Letters: nine.Form,
+			Letters: nine,
 			Words:   uniqueWords,
 		})
 	}
