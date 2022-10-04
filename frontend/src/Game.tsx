@@ -1,3 +1,4 @@
+import { useToast } from "@chakra-ui/react";
 import { useRandomBoard } from "./hooks/board";
 import { useGateState as useGameState } from "./hooks/gameState";
 import Main from "./Main";

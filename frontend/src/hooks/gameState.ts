@@ -1,4 +1,5 @@
 import { useReducer } from "react";
+import { toast } from "../globalToasts";
 
 interface GameState {
     boardLetters: string;
@@ -65,19 +66,21 @@ function reducer(s: GameState, action: GameStateAction): GameState {
             }
         case "submit":
             const submittedWord = s.selectedIndices.map(idx => s.boardLetters[idx]).join("");
-            console.log("Checking word", submittedWord, "...");
             const wordIndex = s.allWords.indexOf(submittedWord);
             if (wordIndex !== -1) {
                 if (s.foundWords.indexOf(submittedWord) === -1) {
-                    console.log("New word found!", submittedWord);
-                    return {...s, foundWords: [...s.foundWords, s.allWords[wordIndex]], selectedIndices: []}
+                    const foundWords = [...s.foundWords, s.allWords[wordIndex]];
+                    if (foundWords.length === s.allWords.length) {
+                        return { ...s, gameOver: true, foundWords, selectedIndices: []};
+                    }
+                    return {...s, foundWords, selectedIndices: []}
                 } else {
-                    console.log("Word already found");
+                    setTimeout(() => toast({ title: "Already found", description: `You have already found the word "${submittedWord}"` }))
                 }
             } else {
-                console.log("Word ", submittedWord, " not in", s.allWords);
+                setTimeout(() => toast({ title: "Unknown word", description: `The word "${submittedWord}" is not in the dictionary` }));
             }
             break;
     }
     return s;
-}
+};

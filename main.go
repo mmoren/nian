@@ -82,8 +82,8 @@ func main() {
 
 	rand.Seed(time.Now().UnixMicro())
 
-	var handler http.Handler
-	handler = http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+	var apiHandler http.Handler
+	apiHandler = http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Add("Content-Type", "application/json")
 
 		b := generateBoard()
@@ -92,9 +92,14 @@ func main() {
 			http.Error(w, `{"error":"could not encode board as JSON"}`, http.StatusInternalServerError)
 		}
 	})
-	handler = handlers.CORS(handlers.AllowedMethods([]string{"GET", "HEAD", "OPTIONS"}))(handler)
+	apiHandler = handlers.CORS(handlers.AllowedMethods([]string{"GET", "HEAD", "OPTIONS"}))(apiHandler)
 
-	http.ListenAndServe(":8080", handler)
+	staticHandler := http.FileServer(http.Dir("frontend/build"))
+
+	http.Handle("/board", apiHandler)
+	http.Handle("/", staticHandler)
+
+	http.ListenAndServe(":8080", nil)
 }
 
 func generateBaseBoards() {

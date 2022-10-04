@@ -9,7 +9,11 @@ interface Board {
 }
 
 function getRandomBoard() {
-    return fetch('http://localhost:8080/').then(r => r.json());
+    const url = process.env.REACT_APP_BOARD_SERVER
+        ? process.env.REACT_APP_BOARD_SERVER + '/board'
+        : '/board';
+
+    return fetch(url).then(r => r.json());
 }
 
 export function useRandomBoard(): [Board, () => Promise<Board>] {

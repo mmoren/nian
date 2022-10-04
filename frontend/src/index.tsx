@@ -4,10 +4,10 @@ import './index.css';
 import App from './App';
 import reportWebVitals from './reportWebVitals';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
-import { ReactQueryDevtools } from '@tanstack/react-query-devtools';
 import { ChakraProvider, extendTheme, type ThemeConfig, type theme } from '@chakra-ui/react';
 import '@fontsource/inter/400.css';
 import '@fontsource/inter/700.css';
+import { ToastContainer } from './globalToasts';
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -22,7 +22,7 @@ const root = ReactDOM.createRoot(
 );
 
 const customTheme = extendTheme({
-  initialColorMode: 'dark',  
+  config: { initialColorMode: 'dark' },
   font: {
     heading: `'Inter'`,
     body: `'Inter'`,
@@ -34,6 +34,7 @@ root.render(
     <QueryClientProvider client={queryClient}>
       <ChakraProvider theme={customTheme}>
         <App />
+        <ToastContainer />
       </ChakraProvider>
       {/* <ReactQueryDevtools initialIsOpen={false} /> */}
     </QueryClientProvider>
