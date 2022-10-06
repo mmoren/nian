@@ -20,12 +20,14 @@
       html {
         height: 100%;
       }
-      body {
+      body, html {
+        overscroll-behavior: none;
+
         min-height: 100vh;
         -webkit-touch-callout: none; /* iOS Safari */
           -webkit-user-select: none; /* Safari */
-          -khtml-user-select: none; /* Konqueror HTML */
-            -moz-user-select: none; /* Old versions of Firefox */
+           -khtml-user-select: none; /* Konqueror HTML */
+             -moz-user-select: none; /* Old versions of Firefox */
               -ms-user-select: none; /* Internet Explorer/Edge */
                   user-select: none; /* Non-prefixed version, currently
                                         supported by Chrome, Edge, Opera and Firefox */
@@ -46,7 +48,7 @@
     <title>Nian</title>
   </head>
   <body>
-    <noscript>You need to enable JavaScript to run this app.</noscript>
+    <noscript>Du behöver JavaScript för att kunna använda denna app.</noscript>
     <div id="root"></div>
     <!--
       This HTML file is a template.

@@ -1,13 +1,13 @@
 import React from 'react';
 import ReactDOM from 'react-dom/client';
-import './index.css';
 import App from './App';
 import reportWebVitals from './reportWebVitals';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
-import { ChakraProvider, extendTheme, type ThemeConfig, type theme } from '@chakra-ui/react';
+import { ChakraProvider, extendTheme } from '@chakra-ui/react';
 import '@fontsource/inter/400.css';
 import '@fontsource/inter/700.css';
 import { ToastContainer } from './globalToasts';
+//import { ReactQueryDevtools } from '@tanstack/react-query-devtools';
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -36,7 +36,7 @@ root.render(
         <App />
         <ToastContainer />
       </ChakraProvider>
-      {/* <ReactQueryDevtools initialIsOpen={false} /> */}
+      {/*<ReactQueryDevtools initialIsOpen={false} />*/}
     </QueryClientProvider>
   </React.StrictMode>
 );

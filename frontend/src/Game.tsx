@@ -1,18 +1,28 @@
-import { useToast } from "@chakra-ui/react";
-import { useRandomBoard } from "./hooks/board";
-import { useGateState as useGameState } from "./hooks/gameState";
+import { useEffect, useMemo } from "react";
+import { useBoard } from "./hooks/board";
+import { useGateState as useGameState, type GameState } from "./hooks/gameState";
 import Main from "./Main";
 
-
 export function Game() {
-    const [gameState, dispatch] = useGameState();
-    const [, fetchBoard] = useRandomBoard();
+    const savedState = useMemo(() => {
+        const savedGame = localStorage.getItem("saved_game");
+        if (savedGame) {
+            return JSON.parse(savedGame) as GameState;
+        }
+    }, []);
+    const [gameState, dispatch] = useGameState(savedState);
+    const fetchBoard = useBoard();
+
+    useEffect(() => {
+        localStorage.setItem("saved_game", JSON.stringify(gameState));
+    }, [gameState]);
 
     return (
         <Main
+            seed={gameState.seed}
             onNewGame={async () => {
                 const board = await fetchBoard();
-                dispatch({ type: "new_game", boardLetters: board.letters, words: board.words.map((word) => word.form) });
+                dispatch({ type: "new_game", seed: board.seed, boardLetters: board.letters, words: board.words.map((word) => word.form) });
             }}
             onDeleteLetter={() => dispatch({ type: "delete_letter" })}
             selectedIndices={gameState.selectedIndices}

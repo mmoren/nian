@@ -1,6 +1,7 @@
 import { useQuery } from "@tanstack/react-query";
 
 interface Board {
+    seed: string;
     letters: string;
     words: {
         form: string;
@@ -8,18 +9,17 @@ interface Board {
     }[];
 }
 
-function getRandomBoard() {
-    const url = process.env.REACT_APP_BOARD_SERVER
-        ? process.env.REACT_APP_BOARD_SERVER + '/board'
-        : '/board';
-
-    return fetch(url).then(r => r.json());
+async function getRandomBoard(seed?: string) {
+    const url = `${process.env.REACT_APP_BOARD_SERVER ?? ''}/boards/random`;
+    const response = await fetch(url, {
+        redirect: 'follow',
+    });
+    return response.json();
 }
 
-export function useRandomBoard(): [Board, () => Promise<Board>] {
-    const { data, refetch } = useQuery<Board>(["random-board"], getRandomBoard, {
-        staleTime: 30*60*1000,
-        cacheTime: 30*60*1000,
+export function useBoard(): () => Promise<Board> {
+    const { refetch } = useQuery<Board>(["board", "random"], () => getRandomBoard(), {
+        enabled: false,
     });
-    return [data!, async () => { return (await refetch()).data!; } ];
+    return async () => { return (await refetch()).data!; };
 }

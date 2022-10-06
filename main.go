@@ -2,7 +2,10 @@ package main
 
 import (
 	"bufio"
+	"encoding/base64"
+	"encoding/binary"
 	"encoding/json"
+	"fmt"
 	"log"
 	"math/rand"
 	"net/http"
@@ -13,6 +16,7 @@ import (
 	"time"
 
 	"github.com/gorilla/handlers"
+	"github.com/gorilla/mux"
 )
 
 type Word struct {
@@ -21,7 +25,7 @@ type Word struct {
 	Defs []string `json:"defs"`
 }
 
-var goodWord = regexp.MustCompile("^[a-zåäö]+")
+var goodWord = regexp.MustCompile("^[a-zåäö]+$")
 
 func filter(l []string, min, max int) []string {
 	var out []string
@@ -39,6 +43,7 @@ func filter(l []string, min, max int) []string {
 }
 
 type board struct {
+	Seed    string `json:"seed"`
 	Letters string `json:"letters"`
 	Words   []Word `json:"words"`
 }
@@ -50,26 +55,44 @@ func main() {
 
 	rand.Seed(time.Now().UnixMicro())
 
-	var apiHandler http.Handler
-	apiHandler = http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		w.Header().Add("Content-Type", "application/json")
+	r := mux.NewRouter()
 
-		b := generateBoard()
+	r.NotFoundHandler = http.FileServer(http.Dir("frontend/build"))
 
-		if err := json.NewEncoder(w).Encode(b); err != nil {
-			http.Error(w, `{"error":"could not encode board as JSON"}`, http.StatusInternalServerError)
+	r.Use(handlers.CORS(handlers.AllowedMethods([]string{"GET", "HEAD", "OPTIONS"})))
+
+	r.HandleFunc("/boards/random", func(w http.ResponseWriter, r *http.Request) {
+		seed := rand.Uint64()
+		var seedBytes [8]byte
+		binary.BigEndian.PutUint64(seedBytes[:], seed)
+		seedString := base64.RawURLEncoding.EncodeToString(seedBytes[:])
+		w.Header().Set("Location", fmt.Sprintf("/boards/%s", seedString))
+		w.WriteHeader(http.StatusSeeOther)
+	})
+
+	r.HandleFunc("/boards/{seed}", func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", "application/json")
+
+		if seed, ok := mux.Vars(r)["seed"]; ok {
+			seedBytes, err := base64.RawURLEncoding.DecodeString(seed)
+			if err != nil {
+				http.Error(w, `{"error":"invalid seed"}`, http.StatusNotFound)
+			}
+			seed := binary.BigEndian.Uint64(seedBytes)
+			b := generateBoard(seed)
+
+			w.Header().Set("Cache-Control", "max-age=86400, public, must-revalidate")
+			if err := json.NewEncoder(w).Encode(b); err != nil {
+				http.Error(w, `{"error":"could not encode board as JSON"}`, http.StatusInternalServerError)
+			}
+		} else {
+			http.Error(w, `{"error":"invalid seed"}`, http.StatusNotFound)
 		}
 	})
-	apiHandler = handlers.CORS(handlers.AllowedMethods([]string{"GET", "HEAD", "OPTIONS"}))(apiHandler)
-
-	staticHandler := http.FileServer(http.Dir("frontend/build"))
-
-	http.Handle("/board", apiHandler)
-	http.Handle("/", staticHandler)
 
 	log.Println("ready")
 
-	http.ListenAndServe(":8080", nil)
+	http.ListenAndServe(":8080", r)
 }
 
 func readLines(path string) ([]string, error) {
@@ -128,9 +151,11 @@ func generateBaseBoards() {
 	}
 }
 
-func generateBoard() board {
-	theBoard := allBoards[rand.Int()%len(allBoards)]
-	letters := scramble(theBoard.Letters)
+func generateBoard(seed uint64) board {
+	rnd := rand.New(rand.NewSource(int64(seed)))
+
+	theBoard := allBoards[rnd.Int()%len(allBoards)]
+	letters := scramble(rnd, theBoard.Letters)
 	center := ([]rune(letters))[4]
 
 	var filteredWords []Word
@@ -140,12 +165,19 @@ func generateBoard() board {
 		}
 	}
 
-	return board{Letters: letters, Words: filteredWords}
+	var seedBytes [8]byte
+	binary.BigEndian.PutUint64(seedBytes[:], seed)
+	seedString := base64.RawURLEncoding.EncodeToString(seedBytes[:])
+	return board{
+		Seed:    seedString,
+		Letters: letters,
+		Words:   filteredWords,
+	}
 }
 
-func scramble(word string) string {
+func scramble(rnd *rand.Rand, word string) string {
 	runes := []rune(word)
-	sort.Slice(runes, func(i, j int) bool { return (rand.Int() & 1) == 0 })
+	sort.Slice(runes, func(i, j int) bool { return (rnd.Int() & 1) == 0 })
 	return string(runes)
 }
 

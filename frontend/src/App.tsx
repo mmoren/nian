@@ -2,6 +2,7 @@ import { useErrorBoundary, withErrorBoundary } from "react-use-error-boundary";
 import { QueryErrorResetBoundary } from "@tanstack/react-query";
 import { PropsWithChildren, ReactNode, Suspense } from "react";
 import { Game } from "./Game";
+import { Box, Button, Center, Container, Heading, Spinner, Text, VStack } from "@chakra-ui/react";
 
 interface ErrorBoundaryProps extends PropsWithChildren {
   onReset: () => void;
@@ -23,13 +24,30 @@ export default function App() {
         <ErrorBoundary
           onReset={reset}
           fallback={({ reset: resetBoundary }) => (
-            <div>
-              There was an error!
-              <button onClick={() => resetBoundary()}>Try again</button>
-            </div>
+            <Container h="100vh">
+              <Center h="full">
+                <VStack spacing={3}>
+                  <Heading>
+                    Ett fel inträffade
+                  </Heading>
+                  <Text>
+                    Något gick åt pipan. Försök igen vettja.
+                  </Text>
+                  <Box padding={3}>
+                    <Button onClick={() => resetBoundary()}>Försök igen</Button>
+                  </Box>
+                </VStack>
+              </Center>
+            </Container>
           )}
         >
-          <Suspense fallback={<>Loading</>}>
+          <Suspense
+            fallback={
+              <Center h="100vh">
+                <Spinner/>
+              </Center>
+            }
+          >
             <Game />
           </Suspense>
         </ErrorBoundary>

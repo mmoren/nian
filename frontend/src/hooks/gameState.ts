@@ -1,7 +1,8 @@
 import { useReducer } from "react";
 import { toast } from "../globalToasts";
 
-interface GameState {
+export interface GameState {
+    seed: string;
     boardLetters: string;
     selectedIndices: number[];
     foundWords: string[];
@@ -29,12 +30,14 @@ interface GiveUpAction {
 interface NewGameAction {
     type: "new_game";
     boardLetters: string;
+    seed: string;
     words: string[];
 }
 
 type GameStateAction = LetterSelectAction | GiveUpAction | DeleteLetterAction | SubmitAction | NewGameAction;
 
 const initialState: GameState = {
+    seed: '',
     boardLetters: '',
     selectedIndices: [],
     foundWords: [],
@@ -42,11 +45,12 @@ const initialState: GameState = {
     gameOver: true,
 };
 
-export function useGateState() {
-    return useReducer(reducer, initialState);
+export function useGateState(savedState?: GameState) {
+    return useReducer(reducer, savedState ?? initialState);
 }
 
 function reducer(s: GameState, action: GameStateAction): GameState {
+    console.log(s, action);
     switch (action.type) {
         case "select_letter":
             if (s.selectedIndices.indexOf(action.index) === -1) {
@@ -58,7 +62,7 @@ function reducer(s: GameState, action: GameStateAction): GameState {
         case "delete_letter":
             return {...s, selectedIndices: s.selectedIndices.slice(0, s.selectedIndices.length - 1)};
         case "new_game":
-            return {...s, selectedIndices: [], boardLetters: action.boardLetters, allWords: action.words, foundWords: [], gameOver: false};
+            return {...s, selectedIndices: [], seed: action.seed, boardLetters: action.boardLetters, allWords: action.words, foundWords: [], gameOver: false};
         case "give_up":
             return {
                 ...s,
@@ -75,10 +79,10 @@ function reducer(s: GameState, action: GameStateAction): GameState {
                     }
                     return {...s, foundWords, selectedIndices: []}
                 } else {
-                    setTimeout(() => toast({ title: "Already found", description: `You have already found the word "${submittedWord}"` }))
+                    setTimeout(() => toast({ title: "Redan hittat", description: `Du har redan hittat ordet "${submittedWord}"` }))
                 }
             } else {
-                setTimeout(() => toast({ title: "Unknown word", description: `The word "${submittedWord}" is not in the dictionary` }));
+                setTimeout(() => toast({ title: "Okänt ord", description: `Ordet "${submittedWord}" finns inte i ordlistan` }));
             }
             break;
     }
