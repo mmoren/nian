@@ -105,7 +105,7 @@ func main() {
 }
 
 func readLines(path string) ([]string, error) {
-	file, err := os.Open(path)
+	file, err := wordlist.Open(path)
 	if err != nil {
 		return nil, err
 	}
