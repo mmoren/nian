@@ -1,4 +1,4 @@
-module gitlab.com/maxmoren/nian
+module github.com/maxmoren/nian
 
 go 1.19
 
