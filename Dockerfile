@@ -4,7 +4,7 @@ WORKDIR /usr/src/nian
 COPY frontend/package.json frontend/package-lock.json ./
 RUN npm ci
 COPY frontend/ ./
-RUN PUBLIC_URL=https://nian-5goicypiha-lz.a.run.app npm run build
+RUN PUBLIC_URL=https://nian.g.maxmoren.com npm run build
 
 FROM golang:1.19-bullseye
 
