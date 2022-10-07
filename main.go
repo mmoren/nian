@@ -6,6 +6,7 @@ import (
 	"encoding/binary"
 	"encoding/json"
 	"fmt"
+	"io/fs"
 	"log"
 	"math/rand"
 	"net/http"
@@ -57,7 +58,8 @@ func main() {
 
 	r := mux.NewRouter()
 
-	r.NotFoundHandler = http.FileServer(http.Dir("frontend/build"))
+	frontendFS, _ := fs.Sub(frontend, "frontend/build")
+	r.NotFoundHandler = http.FileServer(http.FS(frontendFS))
 
 	r.Use(handlers.CORS(handlers.AllowedMethods([]string{"GET", "HEAD", "OPTIONS"})))
 
@@ -92,7 +94,14 @@ func main() {
 
 	log.Println("ready")
 
-	http.ListenAndServe(":8080", r)
+	// Determine port for HTTP service.
+	port := os.Getenv("PORT")
+	if port == "" {
+		port = "8080"
+	}
+	log.Printf("listening on port %s\n", port)
+
+	http.ListenAndServe(":"+port, r)
 }
 
 func readLines(path string) ([]string, error) {
