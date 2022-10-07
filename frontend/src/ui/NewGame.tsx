@@ -45,7 +45,10 @@ export function NewGame({ boardSeed, onNewGame, disabled }: NewGameProps) {
           </ModalBody>
 
           <ModalFooter>
-            <Button variant='ghost' mr={3} onClick={onClose}>
+            <Button variant='ghost' mr={3} onClick={() => {
+              window.history.replaceState(null, '', '/');
+              onClose();
+            }}>
               Avbryt
             </Button>
             <Button

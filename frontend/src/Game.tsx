@@ -12,12 +12,8 @@ export function Game() {
     }, []);
     const [gameState, dispatch] = useGameState(savedState);
 
-    const boardSeed = useMemo(() => {
-        const boardSeed = document.location.pathname.replace(/^\/+/, '');
-        if (boardSeed.length > 0) {
-            return boardSeed;
-        }
-    }, [document.location.pathname]);
+    const urlBoardSeed = document.location.pathname.replace(/^\/(b\/)?/, '');
+    const boardSeed = urlBoardSeed.length > 0 ? urlBoardSeed : undefined;
 
     useEffect(() => {
         localStorage.setItem("saved_game", JSON.stringify(gameState));

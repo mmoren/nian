@@ -24,7 +24,7 @@ interface ShareProps {
 }
 
 export function Share({ seed }: ShareProps) {
-    const url = `${process.env.PUBLIC_URL}/${seed}`;
+    const url = `${process.env.PUBLIC_URL}/b/${seed}`;
     const { onCopy, hasCopied } = useClipboard(url);
     return (
         <Popover>

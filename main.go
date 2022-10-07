@@ -2,10 +2,12 @@ package main
 
 import (
 	"bufio"
+	"bytes"
 	"encoding/base64"
 	"encoding/binary"
 	"encoding/json"
 	"fmt"
+	"io"
 	"io/fs"
 	"log"
 	"math/rand"
@@ -51,6 +53,30 @@ type board struct {
 
 var allBoards []board
 
+var start = time.Now()
+
+func serveFiles(fileSystem fs.FS) http.Handler {
+	index, err := fileSystem.Open("index.html")
+	if err != nil {
+		panic("no index.html")
+	}
+	indexContent, err := io.ReadAll(index)
+	if err != nil {
+		panic("read index.html")
+	}
+	indexReadSeeker := bytes.NewReader(indexContent)
+	fileServer := http.FileServer(http.FS(fileSystem))
+
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if r.URL.Path == "/" || strings.HasPrefix(r.URL.Path, "/b/") {
+			http.ServeContent(w, r, "index.html", start, indexReadSeeker)
+			return
+		}
+
+		fileServer.ServeHTTP(w, r)
+	})
+}
+
 func main() {
 	generateBaseBoards()
 
@@ -59,7 +85,7 @@ func main() {
 	r := mux.NewRouter()
 
 	frontendFS, _ := fs.Sub(frontend, "frontend/build")
-	r.NotFoundHandler = http.FileServer(http.FS(frontendFS))
+	r.NotFoundHandler = serveFiles(frontendFS)
 
 	r.Use(handlers.CORS(handlers.AllowedMethods([]string{"GET", "HEAD", "OPTIONS"})))
 
