@@ -45,12 +45,11 @@ const initialState: GameState = {
     gameOver: true,
 };
 
-export function useGateState(savedState?: GameState) {
+export function useGameState(savedState?: GameState) {
     return useReducer(reducer, savedState ?? initialState);
 }
 
 function reducer(s: GameState, action: GameStateAction): GameState {
-    console.log(s, action);
     switch (action.type) {
         case "select_letter":
             if (s.selectedIndices.indexOf(action.index) === -1) {
